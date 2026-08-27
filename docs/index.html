@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta
+      name="description"
+      content="TTPO brings label-free test-time policy optimization to mathematical reasoning through asymmetric self-distillation and reinforcement learning."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TTPO: Test-Time Policy Optimization" />
+    <meta
+      property="og:description"
+      content="Signal-efficient, noise-robust, self-evolving reasoning without ground-truth labels."
+    />
+    <meta property="og:image" content="https://zju-real.github.io/TTPO/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TTPO: Test-Time Policy Optimization" />
+    <meta
+      name="twitter:description"
+      content="Signal-efficient, noise-robust, self-evolving reasoning without ground-truth labels."
+    />
+    <meta name="twitter:image" content="https://zju-real.github.io/TTPO/og.png" />
+    <link rel="canonical" href="https://zju-real.github.io/TTPO/" />
+    <link rel="icon" href="./favicon.png" type="image/png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>TTPO: Test-Time Policy Optimization</title>
+  </head>
+  <body>
+    <main>
+      <header class="hero container">
+        <h1><span>TTPO:</span> Test-Time Policy Optimization</h1>
+
+        <div class="authors" aria-label="Authors">
+          <span>Aozhe Wang<sup>1,2,*</sup></span>
+          <span>Zhengxi Lu<sup>1,*</sup></span>
+          <span>Jianze Wang<sup>2</sup></span>
+          <span>Shangke Lv<sup>1</sup></span>
+          <span>Ying Liu<sup>2</sup></span>
+          <span>Weiming Lu<sup>1</sup></span>
+          <span>Jun Xiao<sup>1</sup></span>
+          <span>Yueting Zhuang<sup>1</sup></span>
+          <span>Hua Yang<sup>2</sup></span>
+          <span>Qianglong Chen<sup>2,†</sup></span>
+          <span>Yongliang Shen<sup>1,†</sup></span>
+        </div>
+
+        <p class="affiliations">
+          <sup>1</sup>Zhejiang University &nbsp;&nbsp; <sup>2</sup>Alibaba Group<br />
+          <small><sup>*</sup>Equal contribution. <sup>†</sup>Corresponding authors.</small>
+        </p>
+        <nav class="project-links" aria-label="Project links">
+          <a href="./TTPO.pdf">Paper</a>
+          <a href="https://github.com/ZJU-REAL/TTPO" target="_blank" rel="noreferrer">Code</a>
+        </nav>
+      </header>
+
+      <section id="abstract" class="content-section">
+        <div class="container">
+          <h2>Abstract</h2>
+          <div class="prose">
+            <p>
+              Reinforcement learning and on-policy self-distillation have advanced mathematical
+              reasoning, but both depend on ground-truth labels and therefore cannot be directly
+              applied to test-time training. Majority-vote pseudo-labels are a natural alternative,
+              yet an incorrect vote can corrupt the teacher and mislead every token.
+            </p>
+            <p>
+              We introduce <strong>Test-Time Policy Optimization (TTPO)</strong>, an asymmetric
+              objective that distills agreeing rollouts through OPSD and penalizes disagreeing
+              rollouts through grouped RL. Token-level weighting and masking concentrate each update
+              on informative positions. Without labels, TTPO matches supervised OPSD across five
+              competition-level benchmarks and improves Qwen3-1.7B from
+              <strong>38.0% to 45.2%</strong> in pure test-time training. The learned capability
+              transfers across benchmarks and remains strong when thinking mode is disabled, where
+              TTPO improves the base models by <strong>25.2–36.4 points</strong> on average.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="teaser-section">
+        <div class="container wide-container">
+          <figure class="paper-figure teaser">
+            <img
+              src="./figures/intro.webp"
+              alt="TTPO motivation, method overview, and performance summary"
+              width="2185"
+              height="1281"
+            />
+            <figcaption>
+              Motivation, overview, and headline performance of TTPO. The asymmetric objective uses
+              agreeing rollouts for OPSD and disagreeing rollouts for GRPO.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="motivation" class="content-section">
+        <div class="container">
+          <h2>Motivation</h2>
+          <div class="prose">
+            <p>
+              On difficult test problems, majority-vote pseudo-labels are wrong for roughly 85% of
+              prompts. However, about 79% of the rollouts that disagree with a wrong pseudo-label
+              are also wrong. This asymmetry makes disagreement a useful negative signal even when
+              the voted answer itself is unreliable.
+            </p>
+            <p>
+              Treating every pseudo-label as a correct teacher would amplify its mistakes, while a
+              single scalar reward discards the rich token-level information in promising
+              trajectories. TTPO instead asks a narrower question: which supervision signal is
+              trustworthy for each rollout? Agreement supports dense self-distillation;
+              disagreement supports a conservative negative reward.
+            </p>
+          </div>
+          <div class="motivation-stats" aria-label="Motivation statistics">
+            <div><strong>≈85%</strong><span>wrong pseudo-labels on hard prompts</span></div>
+            <div><strong>≈79%</strong><span>disagreeing rollouts are also wrong</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="methodology" class="content-section">
+        <div class="container wide-container">
+          <h2>Methodology</h2>
+          <p class="section-intro">
+            For each prompt, TTPO samples multiple solutions and extracts their final answers. A
+            majority vote provides a temporary routing signal—not an assumed ground-truth label—so
+            the model can learn from its own test-time rollouts without external annotations.
+          </p>
+          <figure class="paper-figure full-figure">
+            <img
+              src="./figures/method.webp"
+              alt="TTPO method with majority voting, positive OPSD branch, and negative GRPO branch"
+              loading="lazy"
+              width="2803"
+              height="944"
+            />
+            <figcaption>
+              Majority voting partitions rollouts into positive and negative groups, which receive
+              different update signals.
+            </figcaption>
+          </figure>
+
+          <div class="method-grid">
+            <article>
+              <h3>1. Majority Voting</h3>
+              <p>
+                Sample <em>K</em> trajectories, cluster equivalent answers, and use the largest
+                cluster as the pseudo-label.
+              </p>
+            </article>
+            <article>
+              <h3>2. Positive Samples</h3>
+              <p>
+                Apply forward-KL self-distillation to agreeing rollouts. Token weighting emphasizes
+                uncertain or teacher-divergent positions.
+              </p>
+            </article>
+            <article>
+              <h3>3. Negative Samples</h3>
+              <p>
+                Apply grouped RL penalties to disagreeing rollouts. Token masking limits the update
+                to confident errors and protects locally correct reasoning.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" class="content-section">
+        <div class="container wide-container">
+          <h2>Experimental Results</h2>
+          <p class="section-intro">
+            TTPO consistently outperforms label-free baselines and remains competitive with methods
+            trained using ground-truth labels.
+          </p>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <div>
+                <h3>OpenThoughts Training</h3>
+                <p>Avg@12 across five competition-level benchmarks.</p>
+              </div>
+              <p class="table-legend"><sup>†</sup> Uses ground-truth labels. TTPO is label-free.</p>
+            </div>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="OpenThoughts results table">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Method</th>
+                    <th scope="col">AIME25</th>
+                    <th scope="col">HMMT25</th>
+                    <th scope="col">AIME26</th>
+                    <th scope="col">HMMT26</th>
+                    <th scope="col">BRUMO25</th>
+                    <th scope="col">Average</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="model-row"><th colspan="7" scope="rowgroup">Qwen3-1.7B</th></tr>
+                  <tr><th scope="row">Base</th><td>36.9</td><td>21.9</td><td>37.8</td><td>28.8</td><td>47.5</td><td>34.6</td></tr>
+                  <tr><th scope="row">+GRPO<sup>†</sup></th><td>37.3</td><td>23.6</td><td>40.3</td><td>29.3</td><td>48.1</td><td>35.7</td></tr>
+                  <tr><th scope="row">+OPSD<sup>†</sup></th><td>40.3</td><td>28.1</td><td>46.4</td><td>31.4</td><td>52.5</td><td>39.7</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>41.7</td><td>26.1</td><td>46.5</td><td>31.6</td><td>54.7</td><td>40.1</td></tr>
+
+                  <tr class="model-row"><th colspan="7" scope="rowgroup">Qwen3-4B</th></tr>
+                  <tr><th scope="row">Base</th><td>66.1</td><td>41.9</td><td>65.8</td><td>42.4</td><td>64.0</td><td>56.0</td></tr>
+                  <tr><th scope="row">+GRPO<sup>†</sup></th><td>66.7</td><td>45.0</td><td>66.6</td><td>43.2</td><td>66.1</td><td>57.5</td></tr>
+                  <tr><th scope="row">+OPSD<sup>†</sup></th><td>68.3</td><td>44.2</td><td>68.1</td><td>44.4</td><td>67.2</td><td>58.4</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>69.4</td><td>43.6</td><td>68.1</td><td>44.7</td><td>67.2</td><td>58.6</td></tr>
+
+                  <tr class="model-row"><th colspan="7" scope="rowgroup">Qwen3-8B</th></tr>
+                  <tr><th scope="row">Base</th><td>66.7</td><td>44.2</td><td>67.5</td><td>45.5</td><td>69.2</td><td>58.6</td></tr>
+                  <tr><th scope="row">+GRPO<sup>†</sup></th><td>70.3</td><td>46.7</td><td>69.2</td><td>48.0</td><td>71.9</td><td>61.2</td></tr>
+                  <tr><th scope="row">+OPSD<sup>†</sup></th><td>70.8</td><td>46.4</td><td>72.5</td><td>47.2</td><td>71.4</td><td>61.7</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>71.4</td><td>46.1</td><td>74.2</td><td>48.0</td><td>73.1</td><td>62.6</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="result-analysis">
+            TTPO reaches average scores of <strong>40.1, 58.6, and 62.6</strong> at the 1.7B, 4B,
+            and 8B scales, respectively. Despite using only majority-vote pseudo-labels, it matches
+            or exceeds ground-truth-supervised OPSD at every scale. The result indicates that the
+            supervision source matters less than routing each sample to a signal that remains
+            trustworthy under label noise.
+          </p>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <div>
+                <h3>Test-Time Training</h3>
+                <p>Training directly on unlabeled test problems.</p>
+              </div>
+              <p class="table-legend">No method uses ground-truth labels.</p>
+            </div>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Test-time training results table">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Method</th>
+                    <th scope="col">AIME26</th>
+                    <th scope="col">HMMT26</th>
+                    <th scope="col">BRUMO25</th>
+                    <th scope="col">Average</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="model-row"><th colspan="5" scope="rowgroup">Qwen3-1.7B</th></tr>
+                  <tr><th scope="row">Base</th><td>37.8</td><td>28.8</td><td>47.5</td><td>38.0</td></tr>
+                  <tr><th scope="row">+TTRL</th><td>39.2</td><td>30.6</td><td>50.9</td><td>40.2</td></tr>
+                  <tr><th scope="row">+OPSD-TTT</th><td>44.7</td><td>30.3</td><td>50.8</td><td>41.9</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>48.9</td><td>33.6</td><td>53.1</td><td>45.2</td></tr>
+
+                  <tr class="model-row"><th colspan="5" scope="rowgroup">Qwen3-4B</th></tr>
+                  <tr><th scope="row">Base</th><td>65.8</td><td>42.4</td><td>64.0</td><td>57.4</td></tr>
+                  <tr><th scope="row">+TTRL</th><td>66.4</td><td>43.2</td><td>66.7</td><td>58.8</td></tr>
+                  <tr><th scope="row">+OPSD-TTT</th><td>67.8</td><td>43.4</td><td>66.9</td><td>59.4</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>70.8</td><td>45.7</td><td>66.9</td><td>61.1</td></tr>
+
+                  <tr class="model-row"><th colspan="5" scope="rowgroup">Qwen3-8B</th></tr>
+                  <tr><th scope="row">Base</th><td>67.5</td><td>45.5</td><td>69.2</td><td>60.7</td></tr>
+                  <tr><th scope="row">+TTRL</th><td>70.8</td><td>48.0</td><td>70.1</td><td>63.0</td></tr>
+                  <tr><th scope="row">+OPSD-TTT</th><td>71.7</td><td>47.2</td><td>72.2</td><td>63.7</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>73.9</td><td>48.5</td><td>73.6</td><td>65.3</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="result-analysis">
+            In pure test-time training, Qwen3-1.7B improves from <strong>38.0 to 45.2</strong>
+            Avg@12, outperforming TTRL by 5.0 points and OPSD-TTT by 3.3 points. The gains remain
+            consistent at larger scales; notably, TTPO on Qwen3-4B reaches 61.1 and already exceeds
+            the untrained Qwen3-8B model at 60.7.
+          </p>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <div>
+                <h3>Non-Thinking Evaluation</h3>
+                <p>OpenThoughts training; evaluation with thinking mode disabled.</p>
+              </div>
+              <p class="table-legend"><sup>†</sup> Uses ground-truth labels during training.</p>
+            </div>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Non-thinking evaluation results table">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Method</th>
+                    <th scope="col">AIME25</th>
+                    <th scope="col">HMMT25</th>
+                    <th scope="col">AIME26</th>
+                    <th scope="col">HMMT26</th>
+                    <th scope="col">BRUMO25</th>
+                    <th scope="col">Average</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="model-row"><th colspan="7" scope="rowgroup">Qwen3-1.7B</th></tr>
+                  <tr><th scope="row">Base</th><td>9.2</td><td>5.6</td><td>8.8</td><td>6.1</td><td>17.8</td><td>9.5</td></tr>
+                  <tr><th scope="row">+OPSD<sup>†</sup></th><td>16.9</td><td>9.2</td><td>19.4</td><td>11.9</td><td>25.6</td><td>16.6</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>39.2</td><td>20.6</td><td>39.8</td><td>26.3</td><td>47.5</td><td>34.7</td></tr>
+
+                  <tr class="model-row"><th colspan="7" scope="rowgroup">Qwen3-4B</th></tr>
+                  <tr><th scope="row">Base</th><td>22.2</td><td>12.5</td><td>19.4</td><td>17.2</td><td>28.3</td><td>19.9</td></tr>
+                  <tr><th scope="row">+OPSD<sup>†</sup></th><td>26.7</td><td>18.9</td><td>24.4</td><td>22.5</td><td>36.1</td><td>25.7</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>57.2</td><td>36.7</td><td>61.4</td><td>36.4</td><td>60.8</td><td>50.5</td></tr>
+
+                  <tr class="model-row"><th colspan="7" scope="rowgroup">Qwen3-8B</th></tr>
+                  <tr><th scope="row">Base</th><td>20.6</td><td>11.4</td><td>21.1</td><td>18.7</td><td>29.7</td><td>20.3</td></tr>
+                  <tr><th scope="row">+OPSD<sup>†</sup></th><td>25.0</td><td>14.2</td><td>22.2</td><td>19.9</td><td>37.8</td><td>23.8</td></tr>
+                  <tr class="ours"><th scope="row">+TTPO</th><td>67.8</td><td>42.5</td><td>65.0</td><td>41.2</td><td>67.2</td><td>56.7</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="result-analysis">
+            Disabling thinking mode makes the transfer effect especially clear. TTPO improves the
+            base averages by <strong>+25.2, +30.6, and +36.4</strong> points across the three model
+            scales, far beyond the gains from supervised OPSD (+7.1, +5.8, and +3.5). The positive
+            branch transfers dense reasoning guidance, while the negative branch actively removes
+            failure patterns from the student's own non-thinking distribution.
+          </p>
+
+        </div>
+      </section>
+
+      <section id="analysis" class="content-section">
+        <div class="container wide-container">
+          <h2>Experimental Analysis</h2>
+          <p class="section-intro">
+            Beyond final accuracy, the training dynamics explain why majority-vote routing remains
+            effective even though its pseudo-labels are frequently wrong.
+          </p>
+
+          <div class="analysis-group">
+            <h3>Optimization Dynamics and Exploration</h3>
+            <p class="analysis-copy">
+              Majority-vote routing keeps both branches active and produces a sustained optimization
+              signal. In contrast, ground-truth routing often finds almost no matching positive
+              rollouts on hard problems, starving the OPSD branch and shrinking group-relative
+              advantages. TTPO also maintains substantially higher entropy than TTRL, preserving
+              exploration instead of collapsing prematurely around a self-consistent answer.
+            </p>
+            <div class="analysis-grid">
+              <figure class="paper-figure">
+                <img
+                  src="./figures/all_loss.webp"
+                  alt="Training loss curves for TTPO and comparison methods"
+                  loading="lazy"
+                  width="1012"
+                  height="507"
+                />
+                <figcaption>
+                  Training loss on AIME26. Pseudo-label routing sustains a stronger learning signal
+                  than routing with ground truth.
+                </figcaption>
+              </figure>
+              <figure class="paper-figure">
+                <img
+                  src="./figures/entropy.webp"
+                  alt="Policy entropy throughout training"
+                  loading="lazy"
+                  width="1007"
+                  height="507"
+                />
+                <figcaption>
+                  Policy entropy during training. TTPO preserves a broader rollout distribution
+                  while TTRL quickly loses diversity.
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="analysis-group">
+            <h3>Pseudo-Label Routing and Self-Evolution</h3>
+            <p class="analysis-copy">
+              Pseudo-labels are easier for the current model to match than difficult ground-truth
+              answers, so they maintain a healthy positive-negative split and keep both objectives
+              useful. As the policy improves, the rollouts used for voting improve too: the majority
+              becomes more accurate, which raises the quality of the next training signal and creates
+              a self-reinforcing improvement cycle.
+            </p>
+            <div class="analysis-grid">
+              <figure class="paper-figure">
+                <img
+                  src="./figures/gt_vs_pseudo.webp"
+                  alt="AIME26 accuracy under pseudo-label and ground-truth routing"
+                  loading="lazy"
+                  width="704"
+                  height="507"
+                />
+                <figcaption>
+                  TTPO with pseudo-label routing ultimately surpasses both ground-truth routing and
+                  supervised OPSD on AIME26.
+                </figcaption>
+              </figure>
+              <figure class="paper-figure">
+                <img
+                  src="./figures/avg_maj.webp"
+                  alt="Average and majority-vote accuracy during TTPO training"
+                  loading="lazy"
+                  width="704"
+                  height="507"
+                />
+                <figcaption>
+                  Avg@12 and Maj@12 rise together, showing that the pseudo-label ceiling itself
+                  improves throughout training.
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="analysis-group">
+            <h3>Cross-Benchmark Generalization</h3>
+            <p class="analysis-copy">
+              TTPO is not simply memorizing the test problems used for adaptation. Training on
+              AIME26, HMMT26, or BRUMO25 also improves performance on the other contests, indicating
+              that the policy internalizes reusable reasoning behavior that transfers beyond the
+              optimization set.
+            </p>
+            <figure class="paper-figure full-figure generalization-figure">
+              <img
+                src="./figures/generalization.webp"
+                alt="Cross-benchmark generalization results"
+                loading="lazy"
+                width="1670"
+                height="360"
+              />
+              <figcaption>
+                Training on one competition benchmark also improves performance on the other
+                benchmarks.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="insights" class="content-section">
+        <div class="container">
+          <h2>Key Insights</h2>
+          <div class="key-insights">
+            <article>
+              <span>01</span>
+              <div>
+                <h3>Noisy labels still contain reliable negative information.</h3>
+                <p>
+                  Majority voting does not need to identify the correct answer reliably. Even when
+                  the vote is wrong, most disagreeing rollouts are wrong as well, so penalizing their
+                  disagreement remains useful without trusting the pseudo-label's content.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span>02</span>
+              <div>
+                <h3>Positive and negative rollouts require different supervision.</h3>
+                <p>
+                  Agreeing rollouts support dense, token-level distillation because the teacher is
+                  conditioned on the answer the rollout already produced. Disagreeing rollouts are
+                  safer to handle with a coarse RL penalty. TTPO's advantage comes from applying each
+                  signal only where its assumptions remain valid.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span>03</span>
+              <div>
+                <h3>Majority-vote routing is aligned with the model's current capability.</h3>
+                <p>
+                  Hard ground-truth answers can leave almost no positive trajectories and weaken both
+                  branches. A vote always forms a reachable consensus, keeping training active; as the
+                  policy improves, better rollouts create better votes and progressively tighter
+                  self-supervision.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span>04</span>
+              <div>
+                <h3>The learned improvement is transferable, not just longer reasoning.</h3>
+                <p>
+                  TTPO improves across model scales and transfers between competition benchmarks.
+                  The especially large gains when thinking mode is disabled show that the student
+                  internalizes useful reasoning behavior rather than relying only on longer inference
+                  traces.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="citation" class="content-section citation-section">
+        <div class="container">
+          <h2>BibTeX</h2>
+          <pre><code>@article{wang2026ttpo,
+  title   = {TTPO: Test-Time Policy Optimization},
+  author  = {Wang, Aozhe and Lu, Zhengxi and Wang, Jianze and Lv, Shangke and
+             Liu, Ying and Lu, Weiming and Xiao, Jun and Zhuang, Yueting and
+             Yang, Hua and Chen, Qianglong and Shen, Yongliang},
+  journal = {Preprint},
+  year    = {2026}
+}</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>TTPO · Zhejiang University &amp; Alibaba Group</p>
+      </div>
+    </footer>
+  </body>
+</html>
