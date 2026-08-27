@@ -104,19 +104,40 @@ sup {
   margin-top: 21px;
 }
 
-.project-links a {
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-width: 92px;
   padding: 7px 18px;
   color: #fff;
-  background: var(--accent);
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
 }
 
-.project-links a:hover {
-  background: #365f8c;
+.project-link img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.arxiv-link {
+  background: #b31b1b;
+}
+
+.arxiv-link:hover {
+  background: #8f1515;
+}
+
+.github-link {
+  background: #24292f;
+}
+
+.github-link:hover {
+  background: #0f1114;
 }
 
 .teaser-section {

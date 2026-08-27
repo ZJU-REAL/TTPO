@@ -1,4 +1,4 @@
-name: opsd
+name: ttpo
 channels:
   - pytorch
   - nvidia

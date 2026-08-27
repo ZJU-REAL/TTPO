@@ -51,8 +51,24 @@
           <small><sup>*</sup>Equal contribution. <sup>†</sup>Corresponding authors.</small>
         </p>
         <nav class="project-links" aria-label="Project links">
-          <a href="./TTPO.pdf">Paper</a>
-          <a href="https://github.com/ZJU-REAL/TTPO" target="_blank" rel="noreferrer">Code</a>
+          <a
+            class="project-link arxiv-link"
+            href="https://zju-real.github.io/TTPO"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img src="./icons/arxiv.svg" alt="" aria-hidden="true" />
+            Paper
+          </a>
+          <a
+            class="project-link github-link"
+            href="https://github.com/ZJU-REAL/TTPO"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img src="./icons/github.svg" alt="" aria-hidden="true" />
+            Code
+          </a>
         </nav>
       </header>
 
@@ -61,20 +77,27 @@
           <h2>Abstract</h2>
           <div class="prose">
             <p>
-              Reinforcement learning and on-policy self-distillation have advanced mathematical
-              reasoning, but both depend on ground-truth labels and therefore cannot be directly
-              applied to test-time training. Majority-vote pseudo-labels are a natural alternative,
-              yet an incorrect vote can corrupt the teacher and mislead every token.
+              Recent prominent post-training methods, such as Reinforcement Learning (RL) and
+              On-Policy Self-Distillation (OPSD), have driven rapid progress in mathematical
+              reasoning for large language models, yet their reliance on ground-truth labels
+              precludes test-time training (TTT). Replacing ground truth with majority-vote
+              pseudo-labels is a natural alternative, yet it is fragile: an incorrect vote corrupts
+              the teacher and misleads every token. We observe that this failure mode is asymmetric:
+              rollouts that disagree with the pseudo-label are typically wrong regardless of whether
+              the vote itself is correct.
             </p>
             <p>
-              We introduce <strong>Test-Time Policy Optimization (TTPO)</strong>, an asymmetric
-              objective that distills agreeing rollouts through OPSD and penalizes disagreeing
-              rollouts through grouped RL. Token-level weighting and masking concentrate each update
-              on informative positions. Without labels, TTPO matches supervised OPSD across five
-              competition-level benchmarks and improves Qwen3-1.7B from
-              <strong>38.0% to 45.2%</strong> in pure test-time training. The learned capability
-              transfers across benchmarks and remains strong when thinking mode is disabled, where
-              TTPO improves the base models by <strong>25.2–36.4 points</strong> on average.
+              Building on this observation, we propose <strong>Test-Time Policy Optimization
+              (TTPO)</strong>, an asymmetric objective that distills agreeing rollouts via OPSD and
+              penalizes disagreeing rollouts with Grouped RL. Token-level selection further refines
+              both branches: distillation down-weights already-converged positions, while RL
+              penalizes only confident errors. Both updates remain well-grounded even under frequent
+              pseudo-label errors, and majority-vote routing yields tighter self-supervision as the
+              model improves. <strong>Without any labels</strong>, TTPO matches label-supervised OPSD
+              on five competition-level benchmarks, raises Qwen3-1.7B from
+              <strong>38.0% to 45.2%</strong> in TTT, yields
+              <strong>+25.2% to +36.4%</strong> without thinking, and shows strong cross-task
+              generalization.
             </p>
           </div>
         </div>
