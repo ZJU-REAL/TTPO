@@ -1,4 +1,4 @@
-# TTPO: Test-Time Policy Optimization
+<h1 align="center">TTPO: Test-Time Policy Optimization</h1>
 
 <p align="center">
   <a href="https://zju-real.github.io/TTPO/"><img src="https://img.shields.io/badge/Project-Page-2f6f9f.svg" alt="Project Page"></a>
