@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv*/
+:/
+eval_results/
+*_output/
+wandb/
