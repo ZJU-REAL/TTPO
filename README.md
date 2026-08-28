@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://zju-real.github.io/TTPO/"><img src="https://img.shields.io/badge/Project-Page-2f6f9f.svg" alt="Project Page"></a>
   <a href="https://arxiv.org/abs/2608.27448"><img src="https://img.shields.io/badge/arXiv-2608.27448-b31b1b.svg" alt="arXiv"></a>
-  <a href="https://huggingface.co/papers/2608.27448"><img src="https://img.shields.io/badge/Hugging_Face-Daily_Paper-FFD21E?logo=huggingface&logoColor=black" alt="Hugging Face Daily Paper"></a>
+  <a href="https://huggingface.co/papers/2608.27448"><img src="https://img.shields.io/badge/Hugging_Face-Daily_Paper-FFD21E" alt="Hugging Face Daily Paper"></a>
 </p>
 
 <p align="center">
