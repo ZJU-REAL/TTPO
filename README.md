@@ -21,12 +21,12 @@
 
 We introduce **TTPO**, a label-free test-time training framework that remains robust even when majority-vote pseudo-labels are incorrect. TTPO uses an asymmetric objective: it distills agreeing rollouts while penalizing confident errors in disagreeing rollouts through grouped reinforcement learning.
 
-## 📢 News
-- **`2026-8-28`**: We released our paper and code for TTPO. Featured as 🤗 HF Daily Paper #2!
-
 <p align="center">
   <img src="docs/figures/method.webp" width="900" alt="TTPO overview and headline results">
 </p>
+
+## 📢 News
+- **`2026-8-28`**: We released our paper and code for TTPO. Featured as 🤗 HF Daily Paper #2!
 
 ## 📊 Results
 
