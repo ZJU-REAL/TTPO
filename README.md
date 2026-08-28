@@ -19,13 +19,10 @@
 
 ## 🔥 Overview
 
-**Test-Time Policy Optimization (TTPO)** improves mathematical reasoning at test time without ground-truth labels. For each problem, TTPO samples multiple solutions and uses majority voting to route them into two complementary learning branches:
+We introduce **TTPO**, a label-free test-time training framework that remains robust even when majority-vote pseudo-labels are incorrect. TTPO uses an asymmetric objective: it distills agreeing rollouts while penalizing confident errors in disagreeing rollouts through grouped reinforcement learning.
 
-- Solutions that agree with the vote receive dense, token-level on-policy self-distillation.
-- Solutions that disagree with the vote receive a conservative grouped RL penalty.
-- Token weighting and masking focus learning on informative positions and reduce the impact of noisy pseudo-labels.
-
-Trained without any labels, TTPO matches or exceeds label-supervised OPSD across Qwen3-1.7B/4B/8B on five competition-level benchmarks. In pure test-time training, it improves Qwen3-1.7B from **38.0 to 45.2 Avg@12**, outperforming both TTRL and self-distillation baselines. With thinking mode disabled, TTPO delivers gains of **+25.2 to +36.4 points** across model scales—several times those of label-supervised OPSD.
+## 📢 News
+- **`2026-8-28`**: We released our paper and code for TTPO. Featured as 🤗 HF Daily Paper #2!
 
 <p align="center">
   <img src="docs/figures/method.webp" width="900" alt="TTPO overview and headline results">
