@@ -2,8 +2,7 @@
 
 <p align="center">
   <a href="https://zju-real.github.io/TTPO/"><img src="https://img.shields.io/badge/Project-Page-2f6f9f.svg" alt="Project Page"></a>
-  <a href=""><img src="https://img.shields.io/badge/Paper-PDF-b31b1b.svg" alt="Paper"></a>
-  <a href="https://github.com/ZJU-REAL/TTPO"><img src="https://img.shields.io/badge/Code-GitHub-24292f.svg" alt="Code"></a>
+  <a href="https://arxiv.org/abs/2608.27448"><img src="https://img.shields.io/badge/arXiv-2608.27448-b31b1b.svg" alt="arXiv"></a>
 </p>
 
 <p align="center">
@@ -87,7 +86,7 @@ After OpenThoughts training, TTPO improves the non-thinking average of Qwen3-1.7
 |  | OPSD† | 25.0 | 14.2 | 22.2 | 19.9 | 37.8 | 23.8 |
 |  | **TTPO** | **67.8** | **42.5** | **65.0** | **41.2** | **67.2** | **56.7** |
 
-See the [paper]() for complete experiments and analysis.
+See the [paper](https://arxiv.org/abs/2608.27448) for complete experiments and analysis.
 
 ## 🛠️ Installation
 
@@ -142,13 +141,16 @@ Omit `--checkpoint_dir` to evaluate the base model. Add `--no_thinking` for non-
 If you find TTPO useful, please cite:
 
 ```bibtex
-@article{wang2026ttpo,
+@misc{wang2026ttpo,
   title   = {TTPO: Test-Time Policy Optimization},
   author  = {Wang, Aozhe and Lu, Zhengxi and Wang, Jianze and Lv, Shangke and
              Liu, Ying and Lu, Weiming and Xiao, Jun and Zhuang, Yueting and
              Yang, Hua and Chen, Qianglong and Shen, Yongliang},
-  journal = {Preprint},
-  year    = {2026}
+  year    = {2026},
+  eprint  = {2608.27448},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url     = {https://arxiv.org/abs/2608.27448}
 }
 ```
 
