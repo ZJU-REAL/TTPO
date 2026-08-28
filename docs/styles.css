@@ -140,6 +140,15 @@ sup {
   background: #0f1114;
 }
 
+.hf-link {
+  color: #1f2328;
+  background: #ffd21e;
+}
+
+.hf-link:hover {
+  background: #e8bc00;
+}
+
 .teaser-section {
   width: min(calc(100% - 24px), 1160px);
   margin: 24px auto;
