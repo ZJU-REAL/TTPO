@@ -139,16 +139,11 @@ Omit `--checkpoint_dir` to evaluate the base model. Add `--no_thinking` for non-
 If you find TTPO useful, please cite:
 
 ```bibtex
-@misc{wang2026ttpo,
-  title   = {TTPO: Test-Time Policy Optimization},
-  author  = {Wang, Aozhe and Lu, Zhengxi and Wang, Jianze and Lv, Shangke and
-             Liu, Ying and Lu, Weiming and Xiao, Jun and Zhuang, Yueting and
-             Yang, Hua and Chen, Qianglong and Shen, Yongliang},
-  year    = {2026},
-  eprint  = {2608.27448},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.CL},
-  url     = {https://arxiv.org/abs/2608.27448}
+@article{wang2026ttpo,
+  title={TTPO: Test-Time Policy Optimization},
+  author={Wang, Aozhe and Lu, Zhengxi and Wang, Jianze and Lv, Shangke and Liu, Ying and Lu, Weiming and Xiao, Jun and Zhuang, Yueting and Yang, Hua and Chen, Qianglong and others},
+  journal={arXiv preprint arXiv:2608.27448},
+  year={2026}
 }
 ```
 
